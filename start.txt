@@ -1,0 +1,11 @@
+conda info --envs
+Music -- bark
+MusicGenEnv -- MusicGAN
+set HF_HOME=E:\MTMusic\hf_cache
+conda activate E:\MTMusic\envs\tortoise
+conda activate MusicGenEnv
+conda activate Music
+conda activate CLIP
+conda activate gptMuse
+
+python test_tortoise.py 

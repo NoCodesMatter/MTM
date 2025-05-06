@@ -1,0 +1,464 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Music Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header class="app-header py-3">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="logo-text h3 mb-0">AI Music Generator</h1>
+                <div>
+                    <a href="#" class="btn btn-outline-primary me-2">Help</a>
+                    <a href="#" class="btn btn-outline-primary">My Music</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Alerts Container -->
+                <div id="alertsContainer" class="mb-4"></div>
+                
+                <div class="primary-card">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" id="generationTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="video-tab" data-bs-toggle="tab" data-bs-target="#video-pane" type="button" role="tab" aria-controls="video-pane" aria-selected="true">
+                                    <i class="bi bi-camera-video me-2"></i>Video To Music
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="parameters-tab" data-bs-toggle="tab" data-bs-target="#parameters-pane" type="button" role="tab" aria-controls="parameters-pane" aria-selected="false">
+                                    <i class="bi bi-sliders me-2"></i>Custom Parameters
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="advanced-tab" data-bs-toggle="tab" data-bs-target="#advanced-pane" type="button" role="tab" aria-controls="advanced-pane" aria-selected="false">
+                                    <i class="bi bi-gear me-2"></i>Advanced Options
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tab-content" id="generationTabsContent">
+                        <div class="tab-pane fade show active" id="video-pane" role="tabpanel" aria-labelledby="video-tab" tabindex="0">
+                            <form method="post" action="{% url 'generate_music' %}" id="generationForm" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="hidden" id="selectedGenre" name="genre" value="electronic">
+                                
+                                <h2 class="h4 mb-4">Generate Music from Video</h2>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label">Upload Video</label>
+                                    <div class="video-upload-zone" id="videoUploadZone">
+                                        <input type="file" id="videoFile" name="videoFile" accept="video/*" class="d-none">
+                                        <div class="upload-icon">
+                                            <i class="bi bi-cloud-arrow-up"></i>
+                                        </div>
+                                        <h3 class="h5">Drag & Drop your video here</h3>
+                                        <p class="text-muted">or click to browse</p>
+                                        <p class="small text-muted">Supported formats: MP4, MOV, AVI (Max 100MB)</p>
+                                    </div>
+                                    
+                                    <!-- Video Preview Container -->
+                                    <div class="video-preview-container" id="videoPreviewContainer">
+                                        <video class="video-preview" id="videoPreview" controls></video>
+                                    </div>
+                                    
+                                    <!-- Video File Name -->
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <span id="videoFileName" class="small text-muted"></span>
+                                        <button type="button" id="removeVideoBtn" class="btn btn-sm btn-outline-danger" style="display: none;">
+                                            <i class="bi bi-trash me-1"></i>Remove
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Upload Progress -->
+                                    <div class="progress mt-3" id="uploadProgress" style="display: none;">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="uploadProgressBar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Music Genre</label>
+                                        <div class="row g-3">
+                                            <div class="col-6">
+                                                <div class="genre-card" data-genre="electronic">
+                                                    <div class="card-body text-center">
+                                                        <div class="genre-icon">
+                                                            <i class="bi bi-speaker"></i>
+                                                        </div>
+                                                        <h3 class="h6 mb-0">Electronic</h3>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="genre-card" data-genre="pop">
+                                                    <div class="card-body text-center">
+                                                        <div class="genre-icon">
+                                                            <i class="bi bi-music-note-beamed"></i>
+                                                        </div>
+                                                        <h3 class="h6 mb-0">Pop</h3>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="genre-card" data-genre="ambient">
+                                                    <div class="card-body text-center">
+                                                        <div class="genre-icon">
+                                                            <i class="bi bi-water"></i>
+                                                        </div>
+                                                        <h3 class="h6 mb-0">Ambient</h3>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="genre-card" data-genre="cinematic">
+                                                    <div class="card-body text-center">
+                                                        <div class="genre-icon">
+                                                            <i class="bi bi-film"></i>
+                                                        </div>
+                                                        <h3 class="h6 mb-0">Cinematic</h3>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="mb-4">
+                                            <label for="length" class="form-label">Length (seconds)</label>
+                                            <div class="d-flex align-items-center">
+                                                <input type="range" class="form-range flex-grow-1 me-2" id="length" name="length" min="30" max="180" step="10" value="60">
+                                                <span class="badge bg-primary" id="lengthValue">60</span>
+                                            </div>
+                                            <div class="small text-muted mt-1">Duration of the generated music</div>
+                                        </div>
+                                        
+                                        <div class="mb-4">
+                                            <label for="tempo" class="form-label">Tempo (BPM)</label>
+                                            <div class="d-flex align-items-center">
+                                                <input type="range" class="form-range flex-grow-1 me-2" id="tempo" name="tempo" min="60" max="180" step="5" value="120">
+                                                <span class="badge bg-primary" id="tempoValue">120</span>
+                                            </div>
+                                            <div class="small text-muted mt-1">Speed of the music</div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label d-block">Include Vocals</label>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" role="switch" id="includeVocals" name="includeVocals">
+                                                <label class="form-check-label" for="includeVocals">Generate with vocals</label>
+                                            </div>
+                                            <div class="small text-muted mt-1">Generate music with AI vocal elements</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="bi bi-music-note me-2"></i>Generate Music
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="tab-pane fade" id="parameters-pane" role="tabpanel" aria-labelledby="parameters-tab" tabindex="0">
+                            <h2 class="h4 mb-4">Custom Generation Parameters</h2>
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="complexity" class="form-label">Complexity</label>
+                                        <select class="form-select" id="complexity" name="complexity">
+                                            <option value="simple">Simple</option>
+                                            <option value="moderate" selected>Moderate</option>
+                                            <option value="complex">Complex</option>
+                                            <option value="very_complex">Very Complex</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="mood" class="form-label">Mood</label>
+                                        <select class="form-select" id="mood" name="mood">
+                                            <option value="happy">Happy</option>
+                                            <option value="sad">Sad</option>
+                                            <option value="energetic" selected>Energetic</option>
+                                            <option value="calm">Calm</option>
+                                            <option value="dramatic">Dramatic</option>
+                                            <option value="mysterious">Mysterious</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="instruments" class="form-label">Featured Instruments</label>
+                                        <select class="form-select" id="instruments" name="instruments" multiple>
+                                            <option value="piano">Piano</option>
+                                            <option value="guitar">Guitar</option>
+                                            <option value="strings">Strings</option>
+                                            <option value="drums">Drums</option>
+                                            <option value="synth" selected>Synthesizer</option>
+                                            <option value="bass">Bass</option>
+                                            <option value="brass">Brass</option>
+                                        </select>
+                                        <div class="small text-muted mt-1">Hold Ctrl/Cmd to select multiple</div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="structure" class="form-label">Structure</label>
+                                        <select class="form-select" id="structure" name="structure">
+                                            <option value="intro_verse_chorus">Intro-Verse-Chorus</option>
+                                            <option value="verse_chorus" selected>Verse-Chorus</option>
+                                            <option value="ambient">Ambient Flow</option>
+                                            <option value="loop">Seamless Loop</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-pane fade" id="advanced-pane" role="tabpanel" aria-labelledby="advanced-tab" tabindex="0">
+                            <h2 class="h4 mb-4">Advanced Options</h2>
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="key" class="form-label">Musical Key</label>
+                                        <select class="form-select" id="key" name="key">
+                                            <option value="C">C Major</option>
+                                            <option value="Cm">C Minor</option>
+                                            <option value="D">D Major</option>
+                                            <option value="Dm">D Minor</option>
+                                            <option value="E">E Major</option>
+                                            <option value="Em">E Minor</option>
+                                            <option value="F">F Major</option>
+                                            <option value="Fm">F Minor</option>
+                                            <option value="G">G Major</option>
+                                            <option value="Gm">G Minor</option>
+                                            <option value="A">A Major</option>
+                                            <option value="Am" selected>A Minor</option>
+                                            <option value="B">B Major</option>
+                                            <option value="Bm">B Minor</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="time_signature" class="form-label">Time Signature</label>
+                                        <select class="form-select" id="time_signature" name="time_signature">
+                                            <option value="4/4" selected>4/4</option>
+                                            <option value="3/4">3/4</option>
+                                            <option value="6/8">6/8</option>
+                                            <option value="5/4">5/4</option>
+                                            <option value="7/8">7/8</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="prompt" class="form-label">Text Prompt (Optional)</label>
+                                        <textarea class="form-control" id="prompt" name="prompt" rows="3" placeholder="Describe the music you want to generate..."></textarea>
+                                        <div class="small text-muted mt-1">Use descriptive language to guide the generation</div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="reference_url" class="form-label">Reference Track URL (Optional)</label>
+                                        <input type="url" class="form-control" id="reference_url" name="reference_url" placeholder="https://example.com/music.mp3">
+                                        <div class="small text-muted mt-1">URL to a reference track for style inspiration</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label d-block">Advanced Voice Settings</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="advancedVocals" name="advancedVocals">
+                                    <label class="form-check-label" for="advancedVocals">Enable advanced vocal processing</label>
+                                </div>
+                            </div>
+                            
+                            <div id="vocalSettings" class="mb-4 ps-4 border-start" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="voice_type" class="form-label">Voice Type</label>
+                                            <select class="form-select" id="voice_type" name="voice_type">
+                                                <option value="female" selected>Female</option>
+                                                <option value="male">Male</option>
+                                                <option value="neutral">Gender Neutral</option>
+                                                <option value="robotic">Robotic</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="lyrics_language" class="form-label">Lyrics Language</label>
+                                            <select class="form-select" id="lyrics_language" name="lyrics_language">
+                                                <option value="english" selected>English</option>
+                                                <option value="spanish">Spanish</option>
+                                                <option value="french">French</option>
+                                                <option value="japanese">Japanese</option>
+                                                <option value="korean">Korean</option>
+                                                <option value="none">No Lyrics (Vocalizing)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="lyrics_theme" class="form-label">Lyrics Theme</label>
+                                    <input type="text" class="form-control" id="lyrics_theme" name="lyrics_theme" placeholder="Enter a theme for generated lyrics">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Loading Section (Initially Hidden) -->
+                <div class="primary-card mt-4" id="loadingSection" style="display: none;">
+                    <div class="card-body">
+                        <div class="loading-container">
+                            <div class="loading-spinner mb-3"></div>
+                            <h3 class="h5 mb-2">Generating Your Music</h3>
+                            <p class="text-muted">We're analyzing your video and creating a unique music composition...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Results Section (Initially Hidden) -->
+                <div class="primary-card mt-4" id="resultsSection" style="display: none;">
+                    <div class="card-header">
+                        <h2 class="h4 mb-0">Your Generated Music</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="audio-player-container">
+                            <div class="d-flex align-items-center mb-3">
+                                <button class="btn btn-primary rounded-circle me-3" id="playBtn" style="width: 50px; height: 50px;">
+                                    <i class="bi bi-play-fill"></i>
+                                </button>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span id="currentTime">0:00</span>
+                                        <span id="duration">0:00</span>
+                                    </div>
+                                    <audio id="musicPlayer" class="audio-player" preload="metadata"></audio>
+                                    <div id="waveform" class="waveform-container"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end">
+                                <button class="btn btn-outline-primary me-2" id="regenerateBtn">
+                                    <i class="bi bi-arrow-repeat me-2"></i>Regenerate
+                                </button>
+                                <a href="#" download class="btn btn-primary" id="downloadBtn">
+                                    <i class="bi bi-download me-2"></i>Download
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="result-card">
+                            <h3 class="h5 mb-3">Generation Details</h3>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                                            <span>Genre</span>
+                                            <strong id="resultGenre">Electronic</strong>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                                            <span>Tempo</span>
+                                            <strong id="resultTempo">120 BPM</strong>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                                            <span>Length</span>
+                                            <strong id="resultLength">60 seconds</strong>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                                            <span>Vocals</span>
+                                            <strong id="resultVocals">No</strong>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <p class="generation-info mt-3 mb-0">
+                                <i class="bi bi-clock-history me-1"></i> Generated on <span id="generationTime">2023-10-19 15:30:45</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="py-4 mt-5 border-top" style="background: rgba(0, 0, 0, 0.3);">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h3 class="h5 logo-text mb-3">AI Music Generator</h3>
+                    <p class="text-muted mb-0">Create unique music compositions powered by advanced AI technology</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <ul class="list-inline mb-0">
+                        <li class="list-inline-item"><a href="#" class="text-decoration-none text-white-50">About</a></li>
+                        <li class="list-inline-item"><a href="#" class="text-decoration-none text-white-50">Privacy</a></li>
+                        <li class="list-inline-item"><a href="#" class="text-decoration-none text-white-50">Terms</a></li>
+                        <li class="list-inline-item"><a href="#" class="text-decoration-none text-white-50">Contact</a></li>
+                    </ul>
+                    <p class="text-muted mt-2 mb-0">&copy; 2023 AI Music Generator. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/wavesurfer.js@6/dist/wavesurfer.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        // Toggle advanced vocal settings
+        document.getElementById('advancedVocals').addEventListener('change', function() {
+            const vocalSettings = document.getElementById('vocalSettings');
+            if (this.checked) {
+                vocalSettings.style.display = 'block';
+            } else {
+                vocalSettings.style.display = 'none';
+            }
+        });
+        
+        // Regenerate button handler
+        document.getElementById('regenerateBtn')?.addEventListener('click', function() {
+            // Show loading section again
+            document.getElementById('loadingSection').style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'none';
+            
+            // Scroll to loading section
+            document.getElementById('loadingSection').scrollIntoView({ behavior: 'smooth' });
+            
+            // Simulate regeneration (for demonstration)
+            setTimeout(() => {
+                document.getElementById('loadingSection').style.display = 'none';
+                document.getElementById('resultsSection').style.display = 'block';
+                
+                // Scroll to results
+                document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+            }, 3000);
+        });
+    </script>
+</body>
+</html> 
