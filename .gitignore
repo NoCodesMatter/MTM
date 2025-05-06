@@ -1,0 +1,20 @@
+# Python 缓存文件
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 环境文件夹
+.env
+.venv/
+envs/
+
+# 缓存目录（huggingface/torch等）
+hf_cache/
+pip_cache/
+torch_cache/
+
+# VSCode配置
+.vscode/
+
+# 忽略嵌套的 Git 仓库
+gpt情绪识别/TransNetV2/
