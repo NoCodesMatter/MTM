@@ -1,3 +1,4 @@
+set HF_HOME=E:\MTMusic\hf_cache
 conda info --envs
 Music -- bark
 MusicGenEnv -- MusicGAN

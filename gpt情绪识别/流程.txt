@@ -1,4 +1,0 @@
-1.运行movement里面的pipeline.py，截取的帧会自动存放在同一目录下的keyframes_output里
-2.运行Callgpt.py，会把结果存到movement里的keyframes_output里，以文档形式
-3.如果报错token爆了，可以用compress.py，里面可以调压缩参数
-4.视频路径啥的都可以调，gpt的prompt也可以调，尽量让输出精简，不然可能爆token
