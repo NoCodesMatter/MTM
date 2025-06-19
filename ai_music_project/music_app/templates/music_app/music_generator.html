@@ -14,11 +14,7 @@
     <header class="app-header py-3">
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
-                <h1 class="logo-text h3 mb-0">AI Music Generator</h1>
-                <div>
-                    <a href="#" class="btn btn-outline-primary me-2">Help</a>
-                    <a href="#" class="btn btn-outline-primary">My Music</a>
-                </div>
+                <h1 style="text-align: center;"class="logo-text h3 mb-0">AI Music Generator</h1>
             </div>
         </div>
     </header>
@@ -86,7 +82,7 @@
                                         <label class="form-label">Music Genre</label>
                                         <div class="row g-3">
                                             <div class="col-6">
-                                                <div class="genre-card" data-genre="electronic">
+                                                <div class="genre-card selected" data-genre="electronic">
                                                     <div class="card-body text-center">
                                                         <div class="genre-icon">
                                                             <i class="bi bi-speaker"></i>
@@ -125,6 +121,16 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                        </div>
+                                        
+                                        <!-- Video Denoise Option -->
+                                        <div class="mt-4">
+                                            <label class="form-label d-block">Video Processing</label>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" role="switch" id="denoiseVideo" name="denoise" value="true">
+                                                <label class="form-check-label" for="denoiseVideo">Denoise video before analysis</label>
+                                            </div>
+                                            <div class="small text-muted mt-1">Reduces noise in the video to improve emotion detection</div>
                                         </div>
                                     </div>
                                     
@@ -318,23 +324,70 @@
                     </div>
                 </div>
                 
+                <!-- 最终播放结果 -->
                 <!-- Results Section (Initially Hidden) -->
                 <div class="primary-card mt-4" id="resultsSection" style="display: none;">
                     <div class="card-header">
                         <h2 class="h4 mb-0">Your Generated Music</h2>
                     </div>
+
                     <div class="card-body">
+                        <!-- Generation Info Summary -->
+                        <div class="result-card mb-4">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="generation-info">
+                                        <div class="mb-2">
+                                            <strong>Genre:</strong> <span id="resultGenre">-</span>
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>Tempo:</strong> <span id="resultTempo">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="generation-info">
+                                        <div class="mb-2">
+                                            <strong>Length:</strong> <span id="resultLength">-</span>
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>Model:</strong> <span id="resultVocals">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 text-md-end">
+                                    <div class="generation-info">
+                                        <div>Generated at: <span id="generationTime">-</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="audio-player-container">
+                            <!-- 主体 -->
                             <div class="d-flex align-items-center mb-3">
                                 <button class="btn btn-primary rounded-circle me-3" id="playBtn" style="width: 50px; height: 50px;">
                                     <i class="bi bi-play-fill"></i>
                                 </button>
+
                                 <div class="flex-grow-1">
                                     <audio id="musicPlayer" class="audio-player" preload="metadata"></audio>
                                     <div id="waveform" class="waveform-container"></div>
                                 </div>
                             </div>
                             
+                            <!-- Video result (if available) -->
+                            <div class="video-result-container mt-4 mb-4">
+                                <h3 class="h5 mb-3">Video with Generated Music</h3>
+                                <div class="video-container">
+                                    <video id="resultVideo" class="w-100" controls volume="1.0">
+                                        <source src="" type="video/mp4">
+                                    </video>
+                                </div>
+                                <div class="small text-muted mt-2">If audio doesn't play automatically, click the video to play with sound</div>
+                            </div>
+                            
+                            <!-- 按钮 -->
                             <div class="d-flex justify-content-end">
                                 <button class="btn btn-outline-primary me-2" id="regenerateBtn">
                                     <i class="bi bi-arrow-repeat me-2"></i>Regenerate
@@ -345,26 +398,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <script>
-                    // 播放音乐
-                    document.getElementById('playBtn')?.addEventListener('click', function () {
-                        // document.getElementById("musicPlayer").play()
-                        showAlert('播放音乐');
-
-                        const audioPlayer = document.getElementById('musicPlayer');
-                        
-                        // 切换播放/暂停
-                        if (audioPlayer.paused) {
-                            audioPlayer.play();
-                            this.innerHTML = '<i class="bi bi-pause-fill"></i>'; // 改变按钮图标为暂停
-                        } else {
-                            audioPlayer.pause();
-                            this.innerHTML = '<i class="bi bi-play-fill"></i>'; // 改变按钮图标为播放
-                        }
-                    });
-                    </script>
-
                 </div>
             </div>
         </div>
@@ -384,7 +417,7 @@
                         <li class="list-inline-item"><a href="#" class="text-decoration-none text-white-50">Terms</a></li>
                         <li class="list-inline-item"><a href="#" class="text-decoration-none text-white-50">Contact</a></li>
                     </ul>
-                    <p class="text-muted mt-2 mb-0">&copy; 2023 AI Music Generator. All rights reserved.</p>
+                    <!-- <p class="text-muted mt-2 mb-0">&copy; 2023 AI Music Generator. All rights reserved.</p> -->
                 </div>
             </div>
         </div>
@@ -403,21 +436,95 @@
         function updateMusicInfo(data) {
             if (!data || !data.generation_info) return;
             const info = data.generation_info;
-            document.getElementById('resultGenre').textContent = info.genre || '-';
-            document.getElementById('resultTempo').textContent = info.complexity === 'complex' ? '140 BPM' : '120 BPM';
-            document.getElementById('resultLength').textContent = '60 seconds';
-            document.getElementById('resultVocals').textContent = info.model || '-';
-            document.getElementById('generationTime').textContent = info.generated_at || '-';
-        }
 
-        // 更新下载
-        /* function updateDownload(data){
-            // 设置下载按钮
-            const downloadBtn = document.getElementById('downloadBBtn');
-            downloadBtn.href = data.music_url;
-            downloadBtn.download = data.music_url.split('/').pop();
-            downloadBtn.style.display = 'inline-block';
-        }*/
+            // 1. 更新界面上的信息
+            if (document.getElementById('resultGenre')) {
+                document.getElementById('resultGenre').textContent = info.genre || '-';
+                document.getElementById('resultTempo').textContent = info.complexity === 'complex' ? '140 BPM' : '120 BPM';
+                document.getElementById('resultLength').textContent = '30 seconds';
+                document.getElementById('resultVocals').textContent = info.model || '-';
+                document.getElementById('generationTime').textContent = info.generated_at || '-';
+            }
+
+            // 2. 决定使用哪个播放器
+            let useAudioPlayer = true;
+            let urlToUse = data.music_url;
+            
+            // 如果有视频URL，优先使用视频播放器
+            if (info.video_url) {
+                useAudioPlayer = false;
+                urlToUse = info.video_url;
+            }
+                
+            // 3. 更新视频播放器
+            const videoElement = document.getElementById('resultVideo');
+            const videoContainer = document.querySelector('.video-result-container');
+            
+            if (info.video_url && videoElement) {
+                console.log('更新视频播放器, URL:', info.video_url);
+                
+                // 确保视频元素是可见的
+                if (videoContainer) {
+                    videoContainer.style.display = 'block';
+                }
+                
+                // 清空现有源
+                while (videoElement.firstChild) {
+                    videoElement.removeChild(videoElement.firstChild);
+                }
+                
+                // 创建新源
+                const source = document.createElement('source');
+                source.src = info.video_url + "?t=" + new Date().getTime(); // 添加时间戳防止缓存
+                source.type = 'video/mp4';
+                videoElement.appendChild(source);
+                
+                // 确保音量是打开的
+                videoElement.muted = false;
+                videoElement.volume = 1.0;
+                
+                // 重新加载视频
+                videoElement.load();
+                
+                // 视频加载完成后自动播放
+                videoElement.onloadeddata = function() {
+                    console.log('视频加载完成，准备播放');
+                    try {
+                        videoElement.play()
+                            .then(() => console.log('视频开始播放'))
+                            .catch(e => console.error('视频播放失败:', e));
+                    } catch (err) {
+                        console.error('播放视频时出错:', err);
+                    }
+                };
+            } else if (videoContainer) {
+                videoContainer.style.display = 'none';
+            }
+            
+            // 4. 更新音频播放器（当没有视频时使用）
+            const audioPlayer = document.getElementById('musicPlayer');
+            if (audioPlayer) {
+                if (useAudioPlayer && data.music_url) {
+                    console.log('更新音频播放器, URL:', data.music_url);
+                    audioPlayer.src = data.music_url + "?t=" + new Date().getTime();
+                    audioPlayer.load();
+                    
+                    // 音频加载完成后显示波形
+                    audioPlayer.onloadeddata = function() {
+                        if (window.wavesurfer) {
+                            window.wavesurfer.load(audioPlayer.src);
+                        }
+                    };
+                } else {
+                    // 如果使用视频播放器，则禁用音频播放器
+                    audioPlayer.src = '';
+                }
+            }
+
+            // 显示结果部分
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
 
         // 拖拽上传功能
         function setupVideoUpload() {
@@ -482,6 +589,24 @@
         }
 
         setupVideoUpload();
+
+        // 音乐风格选择
+        document.querySelectorAll('.genre-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // 移除其他卡片的选中状态
+                document.querySelectorAll('.genre-card').forEach(c => {
+                    c.classList.remove('selected');
+                });
+                
+                // 添加选中状态到当前卡片
+                this.classList.add('selected');
+                
+                // 更新隐藏输入值
+                const genre = this.getAttribute('data-genre');
+                document.getElementById('selectedGenre').value = genre;
+                console.log(`已选择音乐风格: ${genre}`);
+            });
+        });
 
         // 模型按钮点击逻辑
         document.getElementById('gptModelBtn')?.addEventListener('click', function () {
@@ -553,15 +678,33 @@
                 if (data.music_url) {
                     resultsSection.style.display = 'block';
                     resultsSection.scrollIntoView({ behavior: 'smooth' });
-                    const audioPlayer = document.getElementById('musicPlayer');
-                    audioPlayer.src = data.music_url;
-                    if (window.wavesurfer) {
-                        window.wavesurfer.load(audioPlayer.src);
+                    
+                    // 添加时间戳防止缓存
+                    if (data.music_url) {
+                        data.music_url += "?t=" + new Date().getTime();
                     }
-                    // 更新
+                    if (data.generation_info && data.generation_info.video_url) {
+                        data.generation_info.video_url += "?t=" + new Date().getTime();
+                    }
+                    
+                    console.log('收到数据:', data);
+                    console.log('音乐URL:', data.music_url);
+                    console.log('视频URL:', data.generation_info.video_url);
+                    
+                    // 更新结果信息和媒体播放器
                     updateMusicInfo(data);
-                    // updateDownload(data);
-
+                    
+                    // 确认视频已加载
+                    const videoElement = document.getElementById('resultVideo');
+                    if (videoElement && data.generation_info.video_url) {
+                        console.log('检查视频是否已加载');
+                        setTimeout(() => {
+                            if (videoElement.readyState === 0) {
+                                console.log('视频未加载，尝试重新加载');
+                                videoElement.load();
+                            }
+                        }, 1000);
+                    }
                     
                 } else {
                     showAlert('生成失败：' + (data.error || '未返回音乐链接'), 'danger');
@@ -578,6 +721,44 @@
             document.getElementById('generationForm').dispatchEvent(new Event('submit'));
         });
 
+        // 播放按钮逻辑
+        document.getElementById('playBtn')?.addEventListener('click', function () {
+            const audioPlayer = document.getElementById('musicPlayer');
+            const videoPlayer = document.getElementById('resultVideo');
+            const videoHasSource = videoPlayer && videoPlayer.querySelector('source') && videoPlayer.querySelector('source').src;
+            
+            // 判断是播放视频还是音频
+            if (videoHasSource) {
+                // 如果有视频源，控制视频播放
+                console.log('使用视频播放器');
+                if (videoPlayer.paused) {
+                    videoPlayer.play()
+                        .then(() => {
+                            this.innerHTML = '<i class="bi bi-pause-fill"></i>';
+                            console.log('视频开始播放');
+                        })
+                        .catch(err => {
+                            console.error('播放视频出错:', err);
+                            showAlert('视频播放失败，请直接点击视频播放', 'warning');
+                        });
+                } else {
+                    videoPlayer.pause();
+                    this.innerHTML = '<i class="bi bi-play-fill"></i>';
+                }
+            } else if (audioPlayer.src) {
+                // 如果没有视频，使用音频播放器
+                console.log('使用音频播放器');
+                if (audioPlayer.paused) {
+                    audioPlayer.play();
+                    this.innerHTML = '<i class="bi bi-pause-fill"></i>'; // 改变按钮图标为暂停
+                } else {
+                    audioPlayer.pause();
+                    this.innerHTML = '<i class="bi bi-play-fill"></i>'; // 改变按钮图标为播放
+                }
+            } else {
+                showAlert('没有可播放的音频或视频', 'warning');
+            }
+        });
     </script>
 </body>
 </html> 

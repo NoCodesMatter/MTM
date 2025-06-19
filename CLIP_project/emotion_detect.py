@@ -25,7 +25,7 @@ model.float()
 # 情绪提示词
 emotion_labels = [
     # 喜 Joy
-    "Joy: a vibrant scene with warm sunlight, blooming flowers, bright colors, and a peaceful landscape that evokes happiness.A dynamic and energetic scene full of movement, bright lights, fireworks, and visual excitement like a festival or concert",
+    "Joy: a vibrant scene with warm sunlight, blooming flowers, bright colors, and a peaceful landscape that evokes happiness. A dynamic and energetic scene full of movement, bright lights, fireworks, and visual excitement like a festival or concert",
 
     # 怒 Anger
     "Anger: a dramatic and chaotic environment with dark clouds, aggressive fire, broken structures, and intense tension in the atmosphere",
@@ -36,12 +36,40 @@ emotion_labels = [
     # 害怕 Fear
     "Fear: a dark and eerie environment with shadows, fog, abandoned buildings, or looming shapes that create a strong sense of danger, suspense, or unease",
 
-    "Excited: A fast-paced and thrilling electronic track with intense beats and energetic drops, reflecting the excitement and adrenaline of competitive gameplay."
+    # 兴奋 Excited
+    "Excited: A fast-paced and thrilling electronic track with intense beats and energetic drops, reflecting the excitement and adrenaline of competitive gameplay",
 
     # 宁静 Inner Peace
-    "Inner Peace: a calm and tranquil natural scene with soft sunlight, still water, open space, gentle hills or mountains, and a feeling of deep serenity"
+    "Inner Peace: a calm and tranquil natural scene with soft sunlight, still water, open space, gentle hills or mountains, and a feeling of deep serenity",
+    
+    # 惊奇 Surprise
+    "Surprise: an unexpected moment captured with wide eyes, open mouths, and elements of wonder or astonishment, like witnessing a magic trick or unexpected revelation",
+    
+    # 期待 Anticipation
+    "Anticipation: a moment of suspense and forward-looking energy, like waiting for sunrise at a mountain peak or standing at the threshold of a new journey",
+    
+    # 忧郁 Melancholy
+    "Melancholy: a bittersweet scene with muted colors, autumn leaves, vintage photographs, or lone figures in contemplative poses suggesting gentle reflection",
+    
+    # 神秘 Mystery
+    "Mystery: a scene shrouded in partial darkness, with hidden elements, fog or mist, subtle lighting, and a sense of the unknown lurking just beyond view",
+    
+    # 浪漫 Romance
+    "Romance: a tender scene with soft lighting, intimate setting, delicate flowers, pastel colors, and a sense of connection between elements",
+    
+    # 孤独 Loneliness
+    "Loneliness: a single figure or object isolated in a vast space, emphasized by negative space, long shadows, or distant perspective",
+    
+    # 希望 Hope
+    "Hope: a scene showing light breaking through darkness, new growth emerging, upward movement, or bright horizons suggesting optimism and possibility",
+    
+    # 怀旧 Nostalgia
+    "Nostalgia: a warm-toned scene with vintage elements, old photographs, childhood objects, or familiar landscapes that evoke memories of the past"
 ]
-emotion_list = ["Joy", "Anger", "Sadness", "Fear", "Excited", "Inner Peace"]
+
+emotion_list = ["Joy", "Anger", "Sadness", "Fear", "Excited", "Inner Peace", 
+                "Surprise", "Anticipation", "Melancholy", "Mystery", "Romance", 
+                "Loneliness", "Hope", "Nostalgia"]
 text_prompts = [f"a scene evoking {e}" for e in emotion_labels]
 text_tokens = clip.tokenize(text_prompts).to(device)
 

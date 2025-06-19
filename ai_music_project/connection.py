@@ -1,15 +1,21 @@
 import os
 import subprocess
 import shlex
+import ffmpeg
 os.environ["PATH"] += os.pathsep + r"E:\tools\ffmpeg\bin"
 
 # 后台接口
 # ===== 调用gpt获得情感分析 =====
-def call_gpt_emotion(video_path):
+def call_gpt_emotion(video_path, denoise=False, genre="electronic"):
     current_path = os.path.dirname(os.path.abspath(__file__))
 
     # 获取当前项目主文件夹的路径
     project_root = os.path.dirname(current_path)
+
+    # 如果需要降噪，先处理视频
+    if denoise:
+        video_path = denoise_video(video_path)
+        print(f"🔊 使用降噪后的视频: {video_path}")
 
     # 转到gpt情绪识别文件夹，进行关键帧提取
     target_script = os.path.join(project_root, "Gpt_Emotion_Recognition")
@@ -58,17 +64,61 @@ def call_gpt_emotion(video_path):
     with open(text_path, "r", encoding="utf-8") as file:
         lines = file.readlines()
         description = lines[-1].strip()  # 去除末尾换行符
-
-    music_url = music_generate(gen_path, description, frame_path, video_name)
+    
+    # 将音乐风格添加到描述中
+    if genre and genre != "electronic":
+        description = f"{description} in {genre} style"
+    
+    print(f"🎵 使用描述: '{description}' 生成音乐")
+    music_url = music_generate(gen_path, description, frame_path, video_name, video_path)
     return music_url
 
 
+# 视频降噪功能
+def denoise_video(video_path, output_path=None):
+    """使用FFmpeg对视频进行降噪处理
+    
+    Args:
+        video_path: 输入视频路径
+        output_path: 输出路径，如果为None则生成临时文件
+        
+    Returns:
+        处理后的视频路径
+    """
+    import tempfile
+    if output_path is None:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmp:
+            output_path = tmp.name
+    
+    video_name = os.path.basename(video_path)
+    print(f"🔊 对视频 {video_name} 进行降噪处理...")
+    
+    try:
+        # 使用高质量降噪滤镜 hqdn3d
+        (
+            ffmpeg
+            .input(video_path)
+            .filter('hqdn3d', 4, 3, 6, 4.5)  # 亮度、色度、时间滤波器强度
+            .output(output_path, vcodec='libx264', acodec='aac')
+            .run(overwrite_output=True, quiet=True)
+        )
+        print(f"✅ 视频降噪处理完成: {output_path}")
+        return output_path
+    except Exception as e:
+        print(f"❌ 视频降噪处理失败: {str(e)}")
+        return video_path  # 失败时返回原始视频
+
 # ===== 调用clip情感分析 =====
-def call_clip_emotion(video_path):
+def call_clip_emotion(video_path, denoise=False, genre="electronic"):
     current_path = os.path.dirname(os.path.abspath(__file__))
 
     # 获取当前项目主文件夹的路径
     project_root = os.path.dirname(current_path)
+
+    # 如果需要降噪，先处理视频
+    if denoise:
+        video_path = denoise_video(video_path)
+        print(f"🔊 使用降噪后的视频: {video_path}")
 
     # 转到clip情绪识别文件夹
     clip_path = os.path.join(project_root, "ClIP_project", "emotion_detect.py")
@@ -92,13 +142,18 @@ def call_clip_emotion(video_path):
     with open(text_path, "r", encoding="utf-8") as file:
         lines = file.readlines()
         description = lines[-1].strip()  # 去除末尾换行符
-
-    music_url = music_generate(gen_path, description, output_path, video_name)
+    
+    # 将音乐风格添加到描述中
+    if genre and genre != "electronic":
+        description = f"{description} in {genre} style"
+    
+    print(f"🎵 使用描述: '{description}' 生成音乐")
+    music_url = music_generate(gen_path, description, output_path, video_name, video_path)
     return music_url
 
 
 # 调用music_generate出音乐
-def music_generate(gen_path, description, output_path, video_name):
+def music_generate(gen_path, description, output_path, video_name, video_path):
     print("🚀 正在运行 test_musicgen.py ...")
     command = ["python", gen_path, description, output_path, video_name]
     print("💻 CMD:", " ".join(command))
@@ -116,10 +171,92 @@ def music_generate(gen_path, description, output_path, video_name):
 
     # 提取路径并返回
     music_path = os.path.join(output_path, video_name + ".wav")
-    return {"status": "success", "music_path": music_path}
+
+    # 调用音频和视频合成
+    final_path = combine_music_video(video_path, video_name, music_path, output_path)
+
+    return {"status": "success", "music_path": final_path}
 
 
+def combine_music_video(video_path, video_name, music_path, output_path):
+    """合并视频和音频生成最终的视频文件
+    
+    Args:
+        video_path: 原始视频路径
+        video_name: 视频名称（不含扩展名）
+        music_path: 生成的音乐路径
+        output_path: 输出目录
+        
+    Returns:
+        生成的视频文件路径
+    """
+    final_path = os.path.join(output_path, video_name + ".mp4")
+    print("final_path: ", final_path)
+    print("video_path: ", video_path)
+    print("music_path: ", music_path)
+    
+    # 检查输入文件存在
+    if not os.path.exists(video_path):
+        print(f"❌ 错误: 视频文件不存在: {video_path}")
+        return music_path
+    
+    if not os.path.exists(music_path):
+        print(f"❌ 错误: 音频文件不存在: {music_path}")
+        return video_path
 
+    try:
+        # 先检查音频文件有效性
+        try:
+            audio_probe = ffmpeg.probe(music_path)
+            audio_streams = [stream for stream in audio_probe['streams'] if stream['codec_type'] == 'audio']
+            if not audio_streams:
+                print(f"⚠️ 警告: 音频文件中没有音轨: {music_path}")
+            else:
+                print(f"✅ 音频文件有效: {len(audio_streams)} 个音轨")
+                for i, stream in enumerate(audio_streams):
+                    print(f"  音轨 {i+1}: {stream.get('codec_name', 'unknown')}, {stream.get('channels', 'unknown')} 声道")
+        except Exception as e:
+            print(f"⚠️ 无法探测音频文件: {str(e)}")
+            
+        # 多输入：视频和音频分别 input
+        video_input = ffmpeg.input(video_path)
+        audio_input = ffmpeg.input(music_path)
+
+        # 合成输出
+        ffmpeg.output(
+            video_input, audio_input,
+            final_path,
+            vcodec='copy',
+            acodec='aac',
+            audio_bitrate='192k',
+            map_metadata='-1',  # 去除元数据
+            shortest=None
+        ).run(overwrite_output=True)
+
+        print("✅ 视频和音频合成成功: ", final_path)
+        # 验证文件存在
+        if os.path.exists(final_path):
+            size_bytes = os.path.getsize(final_path)
+            print(f"✅ 输出文件大小: {size_bytes / (1024*1024):.2f} MB")
+            
+            # 检查生成的文件是否包含音频
+            try:
+                output_probe = ffmpeg.probe(final_path)
+                output_audio = [stream for stream in output_probe['streams'] if stream['codec_type'] == 'audio']
+                if not output_audio:
+                    print(f"⚠️ 警告: 生成的视频文件中没有音轨!")
+                else:
+                    print(f"✅ 生成的视频包含 {len(output_audio)} 个音轨")
+            except Exception as e:
+                print(f"⚠️ 无法探测输出文件: {str(e)}")
+        else:
+            print("⚠️ 警告: 输出文件不存在!")
+
+        return final_path
+    except Exception as e:
+        print(f"❌ 视频音频合成失败: {str(e)}")
+        # 失败时返回音频文件路径
+        return music_path
 
 # test case (文件名不能包含中文)
 #call_gpt_emotion(r"E:\MTMusic\video_test\14.mp4")
