@@ -204,8 +204,7 @@ def combine_music_video(video_path, video_name, music_path, output_path):
         print(f"❌ 错误: 音频文件不存在: {music_path}")
         return video_path
 
-    try:
-        # 先检查音频文件有效性
+    try:        # 先检查音频文件有效性
         try:
             audio_probe = ffmpeg.probe(music_path)
             audio_streams = [stream for stream in audio_probe['streams'] if stream['codec_type'] == 'audio']
@@ -218,20 +217,35 @@ def combine_music_video(video_path, video_name, music_path, output_path):
         except Exception as e:
             print(f"⚠️ 无法探测音频文件: {str(e)}")
             
-        # 多输入：视频和音频分别 input
-        video_input = ffmpeg.input(video_path)
-        audio_input = ffmpeg.input(music_path)
-
-        # 合成输出
-        ffmpeg.output(
-            video_input, audio_input,
-            final_path,
-            vcodec='copy',
-            acodec='aac',
-            audio_bitrate='192k',
-            map_metadata='-1',  # 去除元数据
-            shortest=None
-        ).run(overwrite_output=True)
+        # 使用直接的命令行调用，而不是ffmpeg-python API
+        cmd = [
+            "ffmpeg",
+            "-i", video_path,   # 视频输入
+            "-i", music_path,   # 音频输入
+            "-c:v", "copy",     # 复制视频流
+            "-c:a", "aac",      # 重新编码音频为AAC
+            "-b:a", "192k",     # 音频比特率
+            "-map", "0:v:0",    # 从第一个输入取视频
+            "-map", "1:a:0",    # 从第二个输入取音频
+            "-map_metadata", "-1",  # 去除元数据
+            "-shortest",        # 使用最短的输入长度
+            "-y",               # 覆盖输出
+            final_path          # 输出文件
+        ]
+        
+        # 打印命令用于调试
+        print("FFmpeg command:", " ".join(cmd))
+        
+        # 执行命令
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        
+        # 打印输出和错误
+        print("STDOUT:", result.stdout)
+        print("STDERR:", result.stderr)
+        
+        if result.returncode != 0:
+            print(f"❌ FFmpeg 命令失败，返回码: {result.returncode}")
+            raise RuntimeError(f"FFmpeg error: {result.stderr}")
 
         print("✅ 视频和音频合成成功: ", final_path)
         # 验证文件存在

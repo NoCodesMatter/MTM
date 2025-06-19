@@ -380,8 +380,9 @@
                             <div class="video-result-container mt-4 mb-4">
                                 <h3 class="h5 mb-3">Video with Generated Music</h3>
                                 <div class="video-container">
-                                    <video id="resultVideo" class="w-100" controls volume="1.0">
+                                    <video id="resultVideo" class="w-100" controls preload="auto">
                                         <source src="" type="video/mp4">
+                                        Your browser does not support the video tag.
                                     </video>
                                 </div>
                                 <div class="small text-muted mt-2">If audio doesn't play automatically, click the video to play with sound</div>
@@ -425,6 +426,22 @@
 
     
     <script>
+        // 添加视频错误监听器
+        document.addEventListener('DOMContentLoaded', function() {
+            const resultVideo = document.getElementById('resultVideo');
+            if (resultVideo) {
+                resultVideo.addEventListener('error', function(e) {
+                    console.error('Video error event:', e);
+                    const videoError = resultVideo.error;
+                    if (videoError) {
+                        console.error('Video error code:', videoError.code);
+                        console.error('Video error message:', videoError.message);
+                    }
+                    showAlert('视频播放出错，请检查控制台获取详细信息', 'warning');
+                });
+            }
+        });
+        
         function showAlert(message, type = 'info') {
             const alertBox = document.createElement('div');
             alertBox.className = `alert alert-${type}`;
@@ -454,9 +471,7 @@
             if (info.video_url) {
                 useAudioPlayer = false;
                 urlToUse = info.video_url;
-            }
-                
-            // 3. 更新视频播放器
+            }                // 3. 更新视频播放器
             const videoElement = document.getElementById('resultVideo');
             const videoContainer = document.querySelector('.video-result-container');
             
@@ -475,7 +490,8 @@
                 
                 // 创建新源
                 const source = document.createElement('source');
-                source.src = info.video_url + "?t=" + new Date().getTime(); // 添加时间戳防止缓存
+                // 使用已经包含时间戳的URL，不要再添加时间戳
+                source.src = info.video_url;
                 source.type = 'video/mp4';
                 videoElement.appendChild(source);
                 
@@ -486,13 +502,32 @@
                 // 重新加载视频
                 videoElement.load();
                 
-                // 视频加载完成后自动播放
+                // 添加调试信息
+                console.log('Video player settings:');
+                console.log('- muted:', videoElement.muted);
+                console.log('- volume:', videoElement.volume);
+                console.log('- controls:', videoElement.controls);
+                console.log('- autoplay:', videoElement.autoplay);
+                
+                // 视频加载完成后进行额外检查
                 videoElement.onloadeddata = function() {
                     console.log('视频加载完成，准备播放');
+                    console.log('- Has audio tracks:', videoElement.audioTracks ? videoElement.audioTracks.length : 'Not supported');
+                    console.log('- Current time:', videoElement.currentTime);
+                    console.log('- Duration:', videoElement.duration);
+                    
+                    // 确保再次设置音量和静音状态
+                    videoElement.muted = false;
+                    videoElement.volume = 1.0;
+                    
                     try {
+                        // 尝试自动播放，但可能被浏览器阻止
                         videoElement.play()
                             .then(() => console.log('视频开始播放'))
-                            .catch(e => console.error('视频播放失败:', e));
+                            .catch(e => {
+                                console.error('视频自动播放失败:', e);
+                                console.log('用户需要手动点击播放按钮');
+                            });
                     } catch (err) {
                         console.error('播放视频时出错:', err);
                     }
@@ -679,17 +714,23 @@
                     resultsSection.style.display = 'block';
                     resultsSection.scrollIntoView({ behavior: 'smooth' });
                     
-                    // 添加时间戳防止缓存
+                    // 添加时间戳防止缓存，确保URL格式正确
                     if (data.music_url) {
-                        data.music_url += "?t=" + new Date().getTime();
+                        // 完全移除所有查询参数并添加新的时间戳
+                        const baseUrl = data.music_url.split('?')[0];
+                        data.music_url = baseUrl + "?t=" + new Date().getTime();
                     }
                     if (data.generation_info && data.generation_info.video_url) {
-                        data.generation_info.video_url += "?t=" + new Date().getTime();
+                        // 完全移除所有查询参数并添加新的时间戳
+                        const baseUrl = data.generation_info.video_url.split('?')[0];
+                        data.generation_info.video_url = baseUrl + "?t=" + new Date().getTime();
                     }
                     
                     console.log('收到数据:', data);
                     console.log('音乐URL:', data.music_url);
-                    console.log('视频URL:', data.generation_info.video_url);
+                    if (data.generation_info && data.generation_info.video_url) {
+                        console.log('视频URL:', data.generation_info.video_url);
+                    }
                     
                     // 更新结果信息和媒体播放器
                     updateMusicInfo(data);
@@ -731,11 +772,31 @@
             if (videoHasSource) {
                 // 如果有视频源，控制视频播放
                 console.log('使用视频播放器');
+                
+                // 确保视频没有静音
+                videoPlayer.muted = false;
+                videoPlayer.volume = 1.0;
+                
                 if (videoPlayer.paused) {
+                    // 打印一些调试信息
+                    console.log('视频播放前状态:');
+                    console.log('- muted:', videoPlayer.muted);
+                    console.log('- volume:', videoPlayer.volume);
+                    console.log('- currentSrc:', videoPlayer.currentSrc);
+                    
                     videoPlayer.play()
                         .then(() => {
                             this.innerHTML = '<i class="bi bi-pause-fill"></i>';
                             console.log('视频开始播放');
+                            
+                            // 再次确认音频状态
+                            setTimeout(() => {
+                                console.log('播放5秒后状态:');
+                                console.log('- muted:', videoPlayer.muted);
+                                console.log('- volume:', videoPlayer.volume);
+                                console.log('- paused:', videoPlayer.paused);
+                                console.log('- currentTime:', videoPlayer.currentTime);
+                            }, 5000);
                         })
                         .catch(err => {
                             console.error('播放视频出错:', err);

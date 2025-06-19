@@ -7,6 +7,7 @@ import tempfile
 import json
 import time
 import shutil
+import subprocess
 
 import connection
 
@@ -74,10 +75,23 @@ def gpt_generate_music(request):
         # 如果是视频文件，也复制并提供URL
         if generated_music_path.endswith('.mp4'):
             video_url = music_url
+            # 检查视频文件是否包含音频
+            try:
+                import ffmpeg
+                video_probe = ffmpeg.probe(music_save_path)
+                video_audio_streams = [stream for stream in video_probe['streams'] if stream['codec_type'] == 'audio']
+                if not video_audio_streams:
+                    print(f"⚠️ 警告: 保存的视频文件中没有音轨: {music_save_path}")
+                else:
+                    print(f"✅ 保存的视频包含 {len(video_audio_streams)} 个音轨")
+                    for i, stream in enumerate(video_audio_streams):
+                        print(f"  音轨 {i+1}: {stream.get('codec_name', 'unknown')}, {stream.get('channels', 'unknown')} 声道")
+            except Exception as e:
+                print(f"⚠️ 无法探测视频文件: {str(e)}")
         
-        # 完整的URL路径（包括域名）
-        full_music_url = 'http://127.0.0.1:8000' + music_url
-        full_video_url = 'http://127.0.0.1:8000' + video_url if video_url else None
+        # 完整的URL路径（使用request.build_absolute_uri来获取完整路径）
+        full_music_url = request.build_absolute_uri(music_url)
+        full_video_url = request.build_absolute_uri(video_url) if video_url else None
         
         print("temp_music_url: ", generated_music_path)
         print("media_music_url: ", full_music_url)
@@ -144,10 +158,23 @@ def local_model_generate_music(request):
         # 如果是视频文件，也复制并提供URL
         if generated_music_path.endswith('.mp4'):
             video_url = music_url
+            # 检查视频文件是否包含音频
+            try:
+                import ffmpeg
+                video_probe = ffmpeg.probe(music_save_path)
+                video_audio_streams = [stream for stream in video_probe['streams'] if stream['codec_type'] == 'audio']
+                if not video_audio_streams:
+                    print(f"⚠️ 警告: 保存的视频文件中没有音轨: {music_save_path}")
+                else:
+                    print(f"✅ 保存的视频包含 {len(video_audio_streams)} 个音轨")
+                    for i, stream in enumerate(video_audio_streams):
+                        print(f"  音轨 {i+1}: {stream.get('codec_name', 'unknown')}, {stream.get('channels', 'unknown')} 声道")
+            except Exception as e:
+                print(f"⚠️ 无法探测视频文件: {str(e)}")
         
-        # 完整的URL路径（包括域名）
-        full_music_url = 'http://127.0.0.1:8000' + music_url
-        full_video_url = 'http://127.0.0.1:8000' + video_url if video_url else None
+        # 完整的URL路径（使用request.build_absolute_uri来获取完整路径）
+        full_music_url = request.build_absolute_uri(music_url)
+        full_video_url = request.build_absolute_uri(video_url) if video_url else None
         
         print("temp_music_url: ", generated_music_path)
         print("media_music_url: ", full_music_url)
