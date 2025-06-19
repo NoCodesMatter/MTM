@@ -2,11 +2,29 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+.installed.cfg
+*.egg
 
 # 环境文件夹
 .env
 .venv/
 envs/
+venv/
+env/
+ENV/
 
 # 缓存目录（huggingface/torch等）
 hf_cache/
@@ -18,3 +36,27 @@ torch_cache/
 
 # 忽略嵌套的 Git 仓库
 gpt情绪识别/TransNetV2/
+
+# 视频和音频文件
+*.mp4
+*.wav
+*.mp3
+
+# 输出目录
+video_test/**/*.mp4
+CLIP_project/analysis_output/
+Gpt_Emotion_Recognition/keyframes_output/
+
+# 数据库文件
+*.sqlite3
+*.db
+
+# 日志文件
+*.log
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 虚拟环境的特定文件
+ai_music_project/venv/

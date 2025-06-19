@@ -2,6 +2,7 @@ import os
 import json
 import base64
 import sys
+import random
 from datetime import datetime
 from openai import OpenAI
 
@@ -14,7 +15,7 @@ def encode_image_to_base64(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode("utf-8")
 
-def get_all_image_batches(image_folder, max_images_per_batch=20, prompt_text=None):
+def get_random_images(image_folder, num_images=20, prompt_text=None):
     if not prompt_text:
         prompt_text = (
             "以下是从一段视频中提取的多个代表性画面，请判断这段视频的整体情绪基调。\n"
@@ -22,54 +23,55 @@ def get_all_image_batches(image_folder, max_images_per_batch=20, prompt_text=Non
             "不要输出其他解释或建议。"
         )
 
-    images = []
-    for filename in sorted(os.listdir(image_folder)):
+    all_images = []
+    for filename in os.listdir(image_folder):
         if filename.lower().endswith((".jpg", ".png")):
             image_path = os.path.join(image_folder, filename)
-            b64_image = encode_image_to_base64(image_path)
-            images.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/jpeg;base64,{b64_image}"
-                }
-            })
-
-    # 分批
-    batches = [images[i:i + max_images_per_batch] for i in range(0, len(images), max_images_per_batch)]
-    return [[{"type": "text", "text": prompt_text}] + batch for batch in batches]
+            all_images.append(image_path)
+    
+    # 随机选择20张图片
+    selected_images = random.sample(all_images, min(num_images, len(all_images)))
+    
+    # 转换为GPT需要的格式
+    image_content = []
+    for image_path in selected_images:
+        b64_image = encode_image_to_base64(image_path)
+        image_content.append({
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:image/jpeg;base64,{b64_image}"
+            }
+        })
+    
+    return [{"type": "text", "text": prompt_text}] + image_content
 
 def analyze_video_emotion_with_gpt(image_folder, save_to_txt=True):
-    all_batches = get_all_image_batches(image_folder)
-    result = ""
+    content = get_random_images(image_folder)
+    print(f"🚀 正在处理随机选择的20张图片...")
 
-    for idx, batch_content in enumerate(all_batches):
-        print(f"\n🚀 正在处理第 {idx+1}/{len(all_batches)} 批...")
+    messages = [{"role": "user", "content": content}]
+    response = client.chat.completions.create(
+        model="gpt-4-turbo",
+        messages=messages,
+        temperature=0.7,
+        max_tokens=2048,
+        timeout=120
+    )
 
-        messages = [{"role": "user", "content": batch_content}]
-        response = client.chat.completions.create(
+    result = response.choices[0].message.content
+
+    if response.choices[0].finish_reason == "length":
+        print("⏭️ 正在续写未完成回复...")
+        messages.append({"role": "user", "content": "请继续刚才的分析"})
+        continuation = client.chat.completions.create(
             model="gpt-4-turbo",
             messages=messages,
-            temperature=0.7,
-            max_tokens=2048,
-            timeout=120
+            max_tokens=2048
         )
-
-        partial_result = response.choices[0].message.content
-        result += f"\n📦 第 {idx+1} 批结果：\n{partial_result}\n"
-
-        if response.choices[0].finish_reason == "length":
-            print("⏭️ 正在续写未完成回复...")
-            messages.append({"role": "user", "content": "请继续刚才的分析"})
-            continuation = client.chat.completions.create(
-                model="gpt-4-turbo",
-                messages=messages,
-                max_tokens=2048
-            )
-            result += "\n（续写）\n" + continuation.choices[0].message.content
+        result += "\n（续写）\n" + continuation.choices[0].message.content
 
     if save_to_txt:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_path = os.path.join(image_folder, f"emotion_analysis_{timestamp}.txt")
+        output_path = os.path.join(image_folder, f"gpt_emotion_analysis.txt")
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(result)
         print(f"\n✅ 分析结果已保存到：{output_path}")

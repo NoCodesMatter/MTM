@@ -97,7 +97,9 @@ function setupVideoUpload() {
     const fileInput = document.getElementById('videoFile');
     const videoPreviewContainer = document.getElementById('videoPreviewContainer');
     const videoPreview = document.getElementById('videoPreview');
+    
     const uploadProgress = document.getElementById('uploadProgress');
+    
     const uploadProgressBar = document.getElementById('uploadProgressBar');
     const videoFileNameEl = document.getElementById('videoFileName');
     const removeVideoBtn = document.getElementById('removeVideoBtn');
@@ -246,50 +248,94 @@ function setupFormSubmission() {
             loadingSection.scrollIntoView({ behavior: 'smooth' });
         }
         
-        // Simulate AI processing (for demonstration)
-        setTimeout(() => {
+        // // Simulate AI processing (for demonstration)
+        // setTimeout(() => {
+        //     if (loadingSection) {
+        //         loadingSection.style.display = 'none';
+        //     }
+            
+        //     // Show results section
+        //     const modelType = document.getElementById('modelTypeInput').value;
+        //     const videoFile = document.getElementById('videoFile').files[0];
+            
+        //     if (modelType && videoFile) {
+        //         resultsSection.style.display = 'block';
+                
+        //         // Scroll to results
+        //         resultsSection.scrollIntoView({ behavior: 'smooth' });
+                
+        //         // Add audio source (for demonstration)
+        //         const audioPlayer = document.getElementById('musicPlayer');
+        //         if (audioPlayer) {
+        //             // In a real app, this would be the URL of the generated audio
+        //             // For demo, we use a placeholder
+        //             audioPlayer.src = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+                    
+        //             // Update waveform if available
+        //             if (window.wavesurfer) {
+        //                 window.wavesurfer.load(audioPlayer.src);
+        //             }
+        //         }
+                
+        //         // Update music info
+        //         updateMusicInfo();
+        //     }
+        // }, 3000); // Simulate 3 seconds of processing time
+        
+        // In a real application, you would send the form data to the server here
+        // 发送到后端
+        fetch('/generate-music/', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('生成失败，服务器返回错误');
+            }
+            return response.json(); // 假设后端返回 JSON
+        })
+        .then(data => {
+            // 隐藏 loading
             if (loadingSection) {
                 loadingSection.style.display = 'none';
             }
-            
-            // Show results section
-            if (resultsSection) {
-                resultsSection.style.display = 'block';
-                
-                // Scroll to results
-                resultsSection.scrollIntoView({ behavior: 'smooth' });
-                
-                // Add audio source (for demonstration)
+
+            const modelType = document.getElementById('modelTypeInput').value;
+            const videoFile = document.getElementById('videoFile').files[0];
+
+            if (modelType && videoFile && data && data.audio_url) {
+                // 显示结果区
+                if (resultsSection) {
+                    resultsSection.style.display = 'block';
+                    resultsSection.scrollIntoView({ behavior: 'smooth' });
+                }
+
+                // 设置音频播放地址
                 const audioPlayer = document.getElementById('musicPlayer');
                 if (audioPlayer) {
-                    // In a real app, this would be the URL of the generated audio
-                    // For demo, we use a placeholder
-                    audioPlayer.src = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
-                    
-                    // Update waveform if available
+                    audioPlayer.src = data.audio_url;
+
+                    // 如果有 waveform，就更新
                     if (window.wavesurfer) {
                         window.wavesurfer.load(audioPlayer.src);
                     }
                 }
-                
-                // Update music info
-                updateMusicInfo();
+
+                // 更新生成信息（你可以根据 data 内容更新文本）
+                updateMusicInfo(data);
+            } else {
+                showAlert('生成成功，但缺少音频地址或数据', 'warning');
             }
-        }, 3000); // Simulate 3 seconds of processing time
-        
-        // In a real application, you would send the form data to the server here
-        // const formData = new FormData(form);
-        // fetch('/generate-music/', {
-        //     method: 'POST',
-        //     body: formData
-        // })
-        // .then(response => response.json())
-        // .then(data => {
-        //     // Handle response
-        // })
-        // .catch(error => {
-        //     console.error('Error:', error);
-        // });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+
+            if (loadingSection) {
+                loadingSection.style.display = 'none';
+            }
+
+            showAlert('音乐生成失败，请稍后重试', 'danger');
+        });
     });
 }
 
@@ -350,20 +396,16 @@ function initializeWaveform() {
 }
 
 function updateMusicInfo() {
-    // Get form values
-    const genre = document.querySelector('.genre-card.selected')?.dataset.genre || 'electronic';
-    const tempo = document.getElementById('tempo').value;
-    const length = document.getElementById('length').value;
-    const vocals = document.getElementById('includeVocals').checked ? 'Yes' : 'No';
-    
-    // Update info in results section
-    document.getElementById('resultGenre').textContent = capitalizeFirstLetter(genre);
-    document.getElementById('resultTempo').textContent = tempo + ' BPM';
-    document.getElementById('resultLength').textContent = length + ' seconds';
-    document.getElementById('resultVocals').textContent = vocals;
-    
-    // Update timestamp
-    document.getElementById('generationTime').textContent = new Date().toLocaleString();
+    if (!data || !data.generation_info) return;
+
+    const info = data.generation_info;
+
+    // 设置结果区域的字段（确保你 HTML 中这些元素的 ID 是一致的）
+    document.getElementById('resultGenre').textContent = info.genre || '-';
+    document.getElementById('resultTempo').textContent = info.complexity === 'complex' ? '140 BPM' : '120 BPM';
+    document.getElementById('resultLength').textContent = '60 seconds';  // 假设固定时长
+    document.getElementById('resultVocals').textContent = info.model || '-';
+    document.getElementById('generationTime').textContent = info.generated_at || '-';
 }
 
 // Helper Functions

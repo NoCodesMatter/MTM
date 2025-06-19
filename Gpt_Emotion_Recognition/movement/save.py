@@ -2,6 +2,7 @@ import os
 import pickle
 import sys
 import argparse
+import stat
 
 # 设置路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -20,6 +21,7 @@ video_name = os.path.splitext(os.path.basename(video_path))[0]  # 获取不带�
 keyframe_pkl_path = os.path.join(current_dir, "lmske_intermediate", "keyframe_indices.pkl")
 frames_list_path = os.path.join(current_dir, "lmske_intermediate", "frames_list.pkl")
 output_folder = os.path.join(current_dir, "keyframes_output", video_name)  # 新建子文件夹
+os.makedirs(output_folder, exist_ok=True)   # 创建文件夹（如果不存在）
 
 def main():
     if not os.path.exists(video_path):
