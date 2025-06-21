@@ -41,7 +41,10 @@ gpt情绪识别/TransNetV2/
 *.mp4
 *.wav
 *.mp3
-
+*.zip
+*.npy
+*.pkl
+*.wav
 # 输出目录
 video_test/**/*.mp4
 CLIP_project/analysis_output/

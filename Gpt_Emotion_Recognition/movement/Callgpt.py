@@ -15,7 +15,7 @@ def encode_image_to_base64(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode("utf-8")
 
-def get_random_images(image_folder, num_images=20, prompt_text=None):
+def get_random_images(image_folder, num_images=10, prompt_text=None):
     if not prompt_text:
         prompt_text = (
             "以下是从一段视频中提取的多个代表性画面，请判断这段视频的整体情绪基调。\n"

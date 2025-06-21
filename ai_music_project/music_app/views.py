@@ -46,6 +46,16 @@ def gpt_generate_music(request):
         complexity = request.POST.get('complexity', 'moderate')
         denoise = request.POST.get('denoise', 'false').lower() == 'true'
         
+        # 获取音乐时长参数
+        try:
+            duration = int(request.POST.get('duration', '30'))
+            if duration < 10:
+                duration = 10
+            elif duration > 60:
+                duration = 60
+        except ValueError:
+            duration = 30
+        
         # 检查是否上传了视频文件
         video_file = request.FILES.get('videoFile')
         video_path = None
@@ -57,8 +67,8 @@ def gpt_generate_music(request):
                     tmp.write(chunk)
                 video_path = tmp.name
 
-        print(f"生成参数: 风格={genre}, 降噪={denoise}")
-        response = connection.call_gpt_emotion(video_path, denoise=denoise, genre=genre)
+        print(f"生成参数: 风格={genre}, 降噪={denoise}, 时长={duration}秒")
+        response = connection.call_gpt_emotion(video_path, denoise=denoise, genre=genre, duration=duration)
 
         generated_music_path = response["music_path"]  # 这个是临时文件路径
         # 把生成的音乐文件复制到 MEDIA_ROOT/music/
@@ -106,6 +116,7 @@ def gpt_generate_music(request):
                 'genre': genre,
                 'complexity': complexity,
                 'model': 'GPT Emotion Analysis',
+                'duration': duration,  # 添加时长参数
                 'generated_at': time.strftime('%Y-%m-%d %H:%M:%S'),
                 'video_url': full_video_url
             }
@@ -129,6 +140,16 @@ def local_model_generate_music(request):
         complexity = request.POST.get('complexity', 'moderate')
         denoise = request.POST.get('denoise', 'false').lower() == 'true'
         
+        # 获取音乐时长参数
+        try:
+            duration = int(request.POST.get('duration', '30'))
+            if duration < 10:
+                duration = 10
+            elif duration > 60:
+                duration = 60
+        except ValueError:
+            duration = 30
+        
         # 检查是否上传了视频文件
         video_file = request.FILES.get('videoFile')
         video_path = None
@@ -140,8 +161,8 @@ def local_model_generate_music(request):
                     tmp.write(chunk)
                 video_path = tmp.name
 
-        print(f"生成参数: 风格={genre}, 降噪={denoise}")
-        response = connection.call_clip_emotion(video_path, denoise=denoise, genre=genre)
+        print(f"生成参数: 风格={genre}, 降噪={denoise}, 时长={duration}秒")
+        response = connection.call_clip_emotion(video_path, denoise=denoise, genre=genre, duration=duration)
 
         generated_music_path = response["music_path"]  # 这个是临时文件路径
         # 把生成的音乐文件复制到 MEDIA_ROOT/music/
@@ -189,6 +210,7 @@ def local_model_generate_music(request):
                 'genre': genre,
                 'complexity': complexity,
                 'model': 'Local English Model',
+                'duration': duration,  # 添加时长参数
                 'generated_at': time.strftime('%Y-%m-%d %H:%M:%S'),
                 'video_url': full_video_url
             }

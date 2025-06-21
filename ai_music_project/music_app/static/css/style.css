@@ -12,13 +12,117 @@
   --shadow-color: rgba(0, 0, 0, 0.2);
 }
 
-body {
+/* body {
   font-family: 'Roboto', sans-serif;
-  background: linear-gradient(135deg, var(--background) 0%, #2d2d2d 100%);
+  background: linear-gradient(135deg, #0000ff 0%, #00ff00 100%);
   color: var(--on-background);
   min-height: 100vh;
   padding-bottom: 60px;
+} */
+
+/* 添加动态背景文字效果 */
+@keyframes floatingText {
+    0% {
+        transform: translate(-100%, -100%) rotate(-30deg);
+        opacity: 0;
+    }
+    20% {
+        opacity: 0.1;
+    }
+    80% {
+        opacity: 0.1;
+    }
+    100% {
+        transform: translate(100%, 100%) rotate(-30deg);
+        opacity: 0;
+    }
 }
+
+/* 添加波浪动画效果 */
+@keyframes gradientWave {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(-45deg, 
+        var(--primary-color),
+        var(--primary-dark),
+        var(--secondary-color),
+        var(--primary-light));
+    background-size: 400% 400%;
+    color: var(--on-background);
+    min-height: 100vh;
+    padding-bottom: 60px;
+    animation: gradientWave 10s ease infinite;
+    position: relative;
+} */
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(-45deg, 
+        var(--primary-color),
+        var(--primary-dark),
+        var(--secondary-color),
+        var(--primary-light));
+    background-size: 400% 400%;
+    color: var(--on-background);
+    height: auto; /* 修改为100vh，限制高度为视窗高度 */
+    margin: 0; /* 移除默认外边距 */
+    padding: 0; /* 移除默认内边距 */
+    animation: gradientWave 10s ease infinite;
+    position: relative;
+}
+
+.container {
+    transform: scale(0.97);
+    max-height: auto; /* 减去header的高度 */
+    overflow-y: auto; /* 如果内容过多，只在容器内滚动 */
+    padding: 20px;
+}
+
+
+/* 为了防止页面内容被固定页脚遮挡,给 main 添加底部内边距 */
+main {
+    padding-bottom: 10px; /* 根据页脚高度调整该值 */
+}
+
+
+/* 添加浮动文字效果 */
+@keyframes floatingText {
+    0% {
+        transform: translate(-100%, -100%) rotate(-30deg);
+        opacity: 0;
+    }
+    20% {
+        opacity: 0.3; /* 增加透明度使文字更清晰 */
+    }
+    80% {
+        opacity: 0.3; /* 保持文字可见时间更长 */
+    }
+    100% {
+        transform: translate(100%, 100%) rotate(-30deg);
+        opacity: 0;
+    }
+}
+
+.text-line {
+    position: absolute;
+    font-size: 8vw;
+    font-weight: 700;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.7); /* 增加基础透明度 */
+    animation: floatingText 20s linear infinite; /* 添加 infinite 确保动画循环播放 */
+}
+
 
 .app-header {
   background: rgba(0, 0, 0, 0.4);
@@ -38,7 +142,7 @@ body {
   letter-spacing: -1px;
 }
 
-.primary-card {
+/* .primary-card {
   background: var(--surface);
   border-radius: 16px;
   box-shadow: 0 8px 24px var(--shadow-color);
@@ -50,6 +154,57 @@ body {
 .primary-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+} */
+
+.primary-card {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px var(--shadow-color);
+    /* border: 2px solid rgba(255, 255, 255, 0.2); */
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+    padding: 20px;
+    margin: 20px;
+}
+
+/* 为 primary-card 内的所有文本添加描边效果 */
+.primary-card * {
+    text-shadow: 
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000;
+}
+
+/* 为不同级别的标题设置不同粗细的描边 */
+.primary-card h1,
+.primary-card h2,
+.primary-card h3,
+.primary-card h4,
+.primary-card h5,
+.primary-card h6 {
+    text-shadow: 
+        -1.5px -1.5px 0 #000,
+        1.5px -1.5px 0 #000,
+        -1.5px 1.5px 0 #000,
+        1.5px 1.5px 0 #000;
+}
+
+/* 为表单元素移除描边效果 */
+.primary-card input,
+.primary-card select,
+.primary-card textarea,
+.primary-card button {
+    text-shadow: none;
+}
+
+/* 悬停效果保持不变 */
+.primary-card:hover {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 12px 36px var(--shadow-color);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .card-header {
@@ -60,6 +215,39 @@ body {
 
 .tab-content {
   padding: 30px;
+}
+
+/* 为生成按钮添加文字描边效果 */
+#gptModelBtn,
+#localModelBtn {
+    color: #ffffff; /* 白色文字 */
+    text-shadow: 
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000;
+    font-weight: 600; /* 加粗字体使描边效果更明显 */
+    font-size: 1.25rem; /* 增加字体大小 */
+    padding: 15px 30px; /* 增加按钮内边距使其更大 */
+}
+
+/* 按钮悬停时保持文字效果 */
+#gptModelBtn:hover,
+#localModelBtn:hover {
+    color: #ffffff;
+    transform: scale(1.02); /* 添加轻微放大效果 */
+    transition: all 0.3s ease;
+}
+
+/* 按钮激活时的样式 */
+#gptModelBtn.btn-primary,
+#localModelBtn.btn-primary {
+    color: #ffffff;
+    text-shadow: 
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000;
 }
 
 /* Custom Form Controls */

@@ -6,8 +6,9 @@ os.environ["PATH"] += os.pathsep + r"E:\tools\ffmpeg\bin"
 
 # 后台接口
 # ===== 调用gpt获得情感分析 =====
-def call_gpt_emotion(video_path, denoise=False, genre="electronic"):
-    current_path = os.path.dirname(os.path.abspath(__file__))
+def call_gpt_emotion(video_path, denoise=False, genre="electronic", duration=30):
+    current_path = os.path.dirname(os.path.abspath(__file__))    # 调试：打印接收到的参数  
+    print(f"[DEBUG] call_gpt_emotion 接收到的参数：视频路径={video_path}, 降噪={denoise}, 风格={genre}, 时长={duration}秒")
 
     # 获取当前项目主文件夹的路径
     project_root = os.path.dirname(current_path)
@@ -64,13 +65,19 @@ def call_gpt_emotion(video_path, denoise=False, genre="electronic"):
     with open(text_path, "r", encoding="utf-8") as file:
         lines = file.readlines()
         description = lines[-1].strip()  # 去除末尾换行符
-    
-    # 将音乐风格添加到描述中
+      # 将音乐风格添加到描述中
     if genre and genre != "electronic":
-        description = f"{description} in {genre} style"
+        description = f"{description} in {genre} style"    # 使用传入的用户指定时长参数，不再使用视频时长或默认值
+    # 注意：我们已经在函数参数里默认设置了duration=30，不再需要重新赋值
+    try:
+        video_info = ffmpeg.probe(video_path)
+        video_duration = int(float(video_info['format']['duration']))
+        print(f"📏 检测到视频时长: {video_duration}秒 (仅供参考，不会覆盖用户指定的时长)")
+    except Exception as e:
+        print(f"⚠️ 无法获取视频时长: {str(e)}")
     
-    print(f"🎵 使用描述: '{description}' 生成音乐")
-    music_url = music_generate(gen_path, description, frame_path, video_name, video_path)
+    print(f"🎵 使用描述: '{description}' 生成音乐，时长: {duration}秒")
+    music_url = music_generate(gen_path, description, frame_path, video_name, video_path, duration)
     return music_url
 
 
@@ -109,8 +116,10 @@ def denoise_video(video_path, output_path=None):
         return video_path  # 失败时返回原始视频
 
 # ===== 调用clip情感分析 =====
-def call_clip_emotion(video_path, denoise=False, genre="electronic"):
+def call_clip_emotion(video_path, denoise=False, genre="electronic", duration=30):
     current_path = os.path.dirname(os.path.abspath(__file__))
+      # 调试：打印接收到的参数
+    print(f"[DEBUG] call_clip_emotion 接收到的参数：视频路径={video_path}, 降噪={denoise}, 风格={genre}, 时长={duration}秒")
 
     # 获取当前项目主文件夹的路径
     project_root = os.path.dirname(current_path)
@@ -142,26 +151,35 @@ def call_clip_emotion(video_path, denoise=False, genre="electronic"):
     with open(text_path, "r", encoding="utf-8") as file:
         lines = file.readlines()
         description = lines[-1].strip()  # 去除末尾换行符
-    
-    # 将音乐风格添加到描述中
+      # 将音乐风格添加到描述中
     if genre and genre != "electronic":
-        description = f"{description} in {genre} style"
+        description = f"{description} in {genre} style"    # 使用传入的用户指定时长参数，不再使用视频时长或默认值
+    # 注意：我们已经在函数参数里默认设置了duration=30，不再需要重新赋值
+    try:
+        video_info = ffmpeg.probe(video_path)
+        video_duration = int(float(video_info['format']['duration']))
+        print(f"📏 检测到视频时长: {video_duration}秒 (仅供参考，不会覆盖用户指定的时长)")
+    except Exception as e:
+        print(f"⚠️ 无法获取视频时长: {str(e)}")
     
-    print(f"🎵 使用描述: '{description}' 生成音乐")
-    music_url = music_generate(gen_path, description, output_path, video_name, video_path)
+    print(f"🎵 使用描述: '{description}' 生成音乐，时长: {duration}秒")
+    music_url = music_generate(gen_path, description, output_path, video_name, video_path, duration)
     return music_url
 
 
 # 调用music_generate出音乐
-def music_generate(gen_path, description, output_path, video_name, video_path):
-    print("🚀 正在运行 test_musicgen.py ...")
-    command = ["python", gen_path, description, output_path, video_name]
-    print("💻 CMD:", " ".join(command))
+def music_generate(gen_path, description, output_path, video_name, video_path, duration=30):
+    print("[INFO] 正在运行 test_musicgen.py ...")
+    # 调试：打印接收到的时长参数
+    print(f"[DEBUG] music_generate 接收到的时长参数: {duration}秒, 类型: {type(duration)}")
+      # 添加时长参数到命令
+    command = ["python", gen_path, description, output_path, video_name, str(duration)]
+    print("[CMD]", " ".join(command))
+    
+    result = subprocess.run(command, capture_output=True, text=True, encoding='utf-8', errors='replace')
 
-    result = subprocess.run(command, capture_output=True, text=True)
-
-    print("📤 STDOUT:\n", result.stdout)
-    print("⚠️ STDERR:\n", result.stderr)
+    print("[OUTPUT] STDOUT:\n", result.stdout)
+    print("[ERROR] STDERR:\n", result.stderr)
 
     if result.returncode != 0:
         print("❌ test_musicgen.py 运行失败")

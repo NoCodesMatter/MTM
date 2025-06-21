@@ -42,6 +42,7 @@ emotion_labels = [
     # 宁静 Inner Peace
     "Inner Peace: a calm and tranquil natural scene with soft sunlight, still water, open space, gentle hills or mountains, and a feeling of deep serenity",
     
+    "Inner Peace1: Calm instrumental music with soft piano notes and gentle strings, creating a serene and tranquil atmosphere."
     # 惊奇 Surprise
     "Surprise: an unexpected moment captured with wide eyes, open mouths, and elements of wonder or astonishment, like witnessing a magic trick or unexpected revelation",
     
@@ -67,7 +68,7 @@ emotion_labels = [
     "Nostalgia: a warm-toned scene with vintage elements, old photographs, childhood objects, or familiar landscapes that evoke memories of the past"
 ]
 
-emotion_list = ["Joy", "Anger", "Sadness", "Fear", "Excited", "Inner Peace", 
+emotion_list = ["Joy", "Anger", "Sadness", "Fear", "Excited", "Inner Peace", "Inner Peace1"
                 "Surprise", "Anticipation", "Melancholy", "Mystery", "Romance", 
                 "Loneliness", "Hope", "Nostalgia"]
 text_prompts = [f"a scene evoking {e}" for e in emotion_labels]

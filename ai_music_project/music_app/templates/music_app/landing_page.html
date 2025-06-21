@@ -1,0 +1,94 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Music Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+</head>
+<body>
+    <div class="landing-container">
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="nav-content">
+                <div class="logo">AI Music</div>
+                <ul class="nav-links">
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#team">Team</a></li>
+                    <li><a href="#blog">Blog</a></li>
+                </ul>
+                <a href="{% url 'index' %}" class="nav-button">Make a song</a>
+            </div>
+        </nav>
+
+        <!-- 主要内容 -->
+        <main>
+            <!-- 背景文字效果 -->
+            <div class="background-text">
+                <div class="text-line">Make a happy song</div>
+                <div class="text-line">Create emotion</div>
+                <div class="text-line">Music that feels how you feel</div>
+                <div class="text-line">Your video, your music</div>
+                <div class="text-line">AI powered music</div>
+            </div>
+
+            <!-- 中央内容 -->
+            <div class="hero-content">
+                <h1 class="main-title">Make a song with AI.</h1>
+                <a href="{% url 'index' %}" class="cta-button">Make a song</a>
+            </div>
+        </main>
+
+        <!-- 底部特性展示 -->
+        <section class="features">
+            <div class="feature-item">
+                <div class="feature-icon">🎬</div>
+                <h3>Video to Music</h3>
+                <p>Upload your video and our AI will create a perfectly matched soundtrack.</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🎵</div>
+                <h3>Multiple Genres</h3>
+                <p>Choose from electronic, ambient, cinematic, or pop music styles.</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🧠</div>
+                <h3>Emotion Detection</h3>
+                <p>Our AI analyzes the emotions in your video to create matching music.</p>
+            </div>
+        </section>
+
+        <!-- 页脚 -->
+        <footer>
+            <div class="footer-content">
+                <p>&copy; {% now "Y" %} AI Music Generator. All rights reserved.</p>
+                <div class="footer-links">
+                    <a href="#privacy">Privacy</a>
+                    <a href="#terms">Terms</a>
+                    <a href="#contact">Contact</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 滚动效果
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 10) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // 背景文字动画效果
+        const textLines = document.querySelectorAll('.text-line');
+        textLines.forEach((line, index) => {
+            line.style.animationDelay = `${index * 0.5}s`;
+        });
+    </script>
+</body>
+</html>
