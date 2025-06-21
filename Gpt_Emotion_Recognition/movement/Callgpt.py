@@ -7,8 +7,8 @@ from datetime import datetime
 from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-TtxIcdKCWgHl1vgvB0C0796b081345E1999a9f2873F39277",
-    base_url="https://api.gpt.ge/v1/"
+    api_key="",
+    base_url=""
 )
 
 def encode_image_to_base64(image_path):
